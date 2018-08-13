@@ -1,0 +1,6 @@
+name: WonderfulChat
+version: ${project.version}
+main: fr.shyrogan.wonderfulchat.WonderfulChat
+authors: [Shyrogan]
+description: A complete and powerful api for Spigot's chat adding features like channels.
+website: http://adventum.fr
