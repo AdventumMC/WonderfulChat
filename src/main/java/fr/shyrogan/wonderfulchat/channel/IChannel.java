@@ -1,6 +1,7 @@
 package fr.shyrogan.wonderfulchat.channel;
 
 import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.entity.Player;
 
 import java.util.Collection;
@@ -55,10 +56,10 @@ public interface IChannel {
      * Basically turn our String into a BaseComponent then send it
      * using Channel's
      *
-     * @param text
+     * @param text Text as a String
      */
     default void send(String text) {
-
+        send(new TextComponent(text));
     }
 
 

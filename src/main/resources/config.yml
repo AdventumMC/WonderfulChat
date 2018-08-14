@@ -1,0 +1,6 @@
+# Allow the plugin to save Chatters (players) informations.
+# You can ignore this section if you're not coding your own ChatterProvider.
+default-chatter-provider: true
+
+# Allow the plugin to send a message to online operators, if disabled or in any errors cases.
+alert-operators: true
