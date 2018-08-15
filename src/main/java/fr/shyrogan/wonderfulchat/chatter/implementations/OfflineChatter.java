@@ -1,9 +1,15 @@
 package fr.shyrogan.wonderfulchat.chatter.implementations;
 
+import com.google.gson.reflect.TypeToken;
 import fr.shyrogan.wonderfulchat.WonderfulChat;
 import fr.shyrogan.wonderfulchat.channel.IChannel;
 import fr.shyrogan.wonderfulchat.chatter.IChatter;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -11,16 +17,18 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * A FutureChatter is the implementation used to load our Chatter.
- * It does contain a Map of each listened channel to load informations.
+ * A OfflineChatter is the implementation used to load our Chatter.
+ * It does contain a List of each listened channel to load informations.
  *
  * It basically get all saved informations from file and then add the player to each
  * channels he is listening to.
- * Then it converts into SimpleChatter by adding a new SimpleChatter to the cache.
+ *
+ * Then it converts into OnlineChatter if the Chatter is online by creating OnlineChatter object
+ * and putting it inside of our cache.
  *
  * @author Sébastien (Shyrogan)
  */
-public final class FutureChatter implements IChatter {
+public final class OfflineChatter implements IChatter {
 
     private final UUID uuid;
     private List<String> listenedChannels;
@@ -30,7 +38,7 @@ public final class FutureChatter implements IChatter {
      *
      * @param uuid Player's Unique ID.
      */
-    public FutureChatter(UUID uuid) {
+    public OfflineChatter(UUID uuid) {
         this.uuid = uuid;
 
         // Path to our chatter file.
@@ -40,8 +48,26 @@ public final class FutureChatter implements IChatter {
         if(!Files.exists(chatterPath)) {
             this.listenedChannels = new LinkedList<>();
         } else {
-
+            try {
+                // Read the file
+                this.listenedChannels = WonderfulChat.getInstance().getGson()
+                        .fromJson(
+                                new FileReader(new File(chatterPath.toUri())),
+                                new TypeToken<List<String>>() {}.getType()
+                        );
+            } catch (FileNotFoundException e) {
+                WonderfulChat.getInstance().severe("Chatter cache file for player exists thrown a FileNotFoundException?");
+                this.listenedChannels = new LinkedList<>();
+            }
         }
+
+        // Checking if he is online.
+        final Player p = Bukkit.getPlayer(uuid);
+        if(p == null) {
+            return;
+        }
+
+        WonderfulChat.getInstance().getChatterProvider().putChatter(new OnlineChatter(p, getListenedChannels()));
     }
 
     /**

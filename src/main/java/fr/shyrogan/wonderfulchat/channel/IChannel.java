@@ -31,7 +31,7 @@ public interface IChannel {
      *
      * @return Channel's prefix.
      */
-    BaseComponent getPrefix();
+    String getPrefix();
 
     /**
      * Modifiy our stored prefix. This one is normally
@@ -40,7 +40,7 @@ public interface IChannel {
      *
      * @param prefix Channel's new prefix.
      */
-    void setPrefix(BaseComponent prefix);
+    void setPrefix(String prefix);
 
     /**
      * Returns every people receiving message from our
@@ -51,6 +51,13 @@ public interface IChannel {
      * @return Collection of Listeners (Player).
      */
     Collection<Player> getListeners();
+
+    /**
+     * Add a player to the Listener collection.
+     *
+     * @param p Player.
+     */
+    void addListener(Player p);
 
     /**
      * Basically turn our String into a BaseComponent then send it

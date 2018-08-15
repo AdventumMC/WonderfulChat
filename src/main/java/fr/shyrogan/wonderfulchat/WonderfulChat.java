@@ -6,6 +6,7 @@ import com.google.gson.GsonBuilder;
 import fr.shyrogan.wonderfulchat.channel.IChannel;
 import fr.shyrogan.wonderfulchat.chatter.provider.ChatterProvider;
 import fr.shyrogan.wonderfulchat.chatter.provider.implementations.SimpleChatterProvider;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -72,6 +73,33 @@ public final class WonderfulChat extends JavaPlugin {
         if(getConfig().getBoolean("default-chatter-provider")) {
             this.setChatterProvider(new SimpleChatterProvider());
         }
+
+        // Looking for channels
+        ConfigurationSection section = getConfig().getConfigurationSection("channels");
+        if(section == null) {
+            getConfig().createSection("channels");
+        }
+        section.getKeys(false).forEach(channelKey -> {
+            ConfigurationSection channelSection = section.getConfigurationSection(channelKey);
+
+            // Well
+            if(channelSection == null) {
+                return;
+            }
+
+            String name = channelSection.getString("name");
+            if(name == null) {
+                getLogger().warning("Found a Channel without name inside of config.yml (Section " + channelKey + "). Skipping loading.");
+            }
+
+            String prefix = channelSection.getString("prefix");
+            if(prefix == null) {
+                getLogger().warning("Found a Channel without prefix inside of config.yml (Section " + channelKey + "). Skipping loading.");
+            }
+
+            String condition = channelSection.getString("name");
+            condition = condition == null ? "" : condition;
+        });
 
         // Checking if there are online players.
 
