@@ -10,14 +10,19 @@ alert-operators: true
 channels:
   staff:
     # Name of the channel, used to save which channel a Chatter is listening to.
+    # REQUIRED.
     name: "Staff"
     # A description displayed inside of /channels
     description: "Private channel between staff members."
     # Displayed prefix of our channel.
+    # REQUIRED.
     prefix: "&c(Staff) &r"
     # Character to put at the beginning of the message to send message inside of that channel.
+    # REQUIRED.
     marker: "#staff"
     # Conditions to use that channel.
+    # Leave an empty text ("") if you don't want to use any conditions.
     conditions: "permission=staff.chat"
     # A Material used to represent our channel inside of /channel
+    # If not specified, Paper is the default one.
     logo: PAPER
