@@ -46,6 +46,16 @@ public interface IChatter {
     Collection<IChannel> getListenedChannels();
 
     /**
+     * Checks if our Chatter listens to a Channel.
+     *
+     * @param channel Channel.
+     * @return True if listening to.
+     */
+    default boolean isListeningTo(IChannel channel) {
+        return getListenedChannels().contains(channel);
+    }
+
+    /**
      * Save Chatter informations. This method is implented inside
      * of the interface because it's generally the same method for each one
      * inside of WonderfulChat.
@@ -57,13 +67,15 @@ public interface IChatter {
 
         wc.getServer().getScheduler().runTaskAsynchronously(wc, () -> {
             // Path to our chatter file.
-            final Path chatterPath = Paths.get(WonderfulChat.getInstance().getDataFolder().toURI().toString(), "chatter_cache", getUniqueId().toString() + ".json");
+            final Path chatterPath = Paths.get(WonderfulChat.getInstance().getDataFolder().getPath(), "chatter_cache", getUniqueId().toString() + ".json");
 
             try {
                 // We write informations inside of the file
+                String json = wc.getGson().toJson(getListenedChannels().stream().map(IChannel::getName).collect(Collectors.toList()));
+                wc.info(json);
                 Files.write(
                         chatterPath,
-                        wc.getGson().toJson(getListenedChannels().stream().map(IChannel::getName).collect(Collectors.toList())).getBytes(Charset.defaultCharset())
+                        json.getBytes(Charset.defaultCharset())
                 );
             } catch (IOException e) {
                 // There might be an error but, no problemo we just remove the file.

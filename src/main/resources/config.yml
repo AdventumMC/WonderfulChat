@@ -4,3 +4,20 @@ default-chatter-provider: true
 
 # Allow the plugin to send a message to online operators, if disabled or in any errors cases.
 alert-operators: true
+
+# These are our channels created from config. You can configure them and add
+# conditions for their utilization.
+channels:
+  staff:
+    # Name of the channel, used to save which channel a Chatter is listening to.
+    name: "Staff"
+    # A description displayed inside of /channels
+    description: "Private channel between staff members."
+    # Displayed prefix of our channel.
+    prefix: "&c(Staff) &r"
+    # Character to put at the beginning of the message to send message inside of that channel.
+    marker: "#staff"
+    # Conditions to use that channel.
+    conditions: "permission=staff.chat"
+    # A Material used to represent our channel inside of /channel
+    logo: PAPER

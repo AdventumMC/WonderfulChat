@@ -1,5 +1,7 @@
 package fr.shyrogan.wonderfulchat.conditions;
 
+import fr.shyrogan.wonderfulchat.conditions.filter.ConditionFilter;
+
 /**
  * Represents a condition inside of our configuration file.
  * It allows us to convert a String into an object too using.
@@ -9,20 +11,19 @@ package fr.shyrogan.wonderfulchat.conditions;
  *
  * @author Sébastien (Shyrogan)
  */
-public class Condition<T> {
+public class Condition {
 
     private final String tag;
-    private final Class<T> type;
+    private final ConditionFilter filter;
 
     /**
      * Creates a Condition. I recommend going through
      *
      * @param tag Condition's name.
-     * @param type Condition's type.
      */
-    private Condition(String tag, Class<T> type) {
+    protected Condition(String tag, ConditionFilter filter) {
         this.tag = tag;
-        this.type = type;
+        this.filter = filter;
     }
 
     /**
@@ -35,13 +36,12 @@ public class Condition<T> {
     }
 
     /**
-     * Returns our condition object type.
-     * This is used inside of our code, not available from configuration.
+     * Returns our channel filter to know if a Player is eligible to receive
+     * messages.
      *
-     * @return Condition's type
+     * @return Predicate
      */
-    public Class<T> getType() {
-        return type;
+    public ConditionFilter getFilter() {
+        return filter;
     }
-
 }

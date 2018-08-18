@@ -7,13 +7,15 @@ import fr.shyrogan.wonderfulchat.chatter.IChatter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -42,25 +44,31 @@ public final class OfflineChatter implements IChatter {
         this.uuid = uuid;
 
         // Path to our chatter file.
-        final Path chatterPath = Paths.get(WonderfulChat.getInstance().getDataFolder().toURI().toString(), "chatter_cache", uuid.toString() + ".json");
+        final Path chatterPath = Paths.get(WonderfulChat.getInstance().getDataFolder().getPath(), "chatter_cache", uuid.toString() + ".json");
 
         // We basically create a list containing each channels he can listen to.
         if(!Files.exists(chatterPath)) {
-            this.listenedChannels = new LinkedList<>();
+            this.listenedChannels = WonderfulChat.getInstance().getChannels().stream().map(IChannel::getName).collect(Collectors.toList());
         } else {
             try {
                 // Read the file
                 this.listenedChannels = WonderfulChat.getInstance().getGson()
                         .fromJson(
-                                new FileReader(new File(chatterPath.toUri())),
+                                new FileReader(chatterPath.toFile()),
                                 new TypeToken<List<String>>() {}.getType()
                         );
             } catch (FileNotFoundException e) {
                 WonderfulChat.getInstance().severe("Chatter cache file for player exists thrown a FileNotFoundException?");
-                this.listenedChannels = new LinkedList<>();
+                this.listenedChannels = WonderfulChat.getInstance().getChannels().stream().map(IChannel::getName).collect(Collectors.toList());
             }
         }
+    }
 
+    /**
+     * Method executed after OfflineChatter's creation. Checking if he is online and
+     * if he is, converting it into a OnlineChatter
+     */
+    public void load() {
         // Checking if he is online.
         final Player p = Bukkit.getPlayer(uuid);
         if(p == null) {

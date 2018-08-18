@@ -4,12 +4,22 @@ import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import fr.shyrogan.wonderfulchat.channel.IChannel;
+import fr.shyrogan.wonderfulchat.channel.implementations.SimpleChannel;
+import fr.shyrogan.wonderfulchat.chatter.implementations.OfflineChatter;
 import fr.shyrogan.wonderfulchat.chatter.provider.ChatterProvider;
 import fr.shyrogan.wonderfulchat.chatter.provider.implementations.SimpleChatterProvider;
+import fr.shyrogan.wonderfulchat.cmd.ChannelCommandExecutor;
+import fr.shyrogan.wonderfulchat.conditions.serialization.SerializedCondition;
+import fr.shyrogan.wonderfulchat.listeners.ChatListener;
+import fr.shyrogan.wonderfulchat.listeners.InventoryListener;
+import fr.shyrogan.wonderfulchat.listeners.PlayerListener;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -69,6 +79,8 @@ public final class WonderfulChat extends JavaPlugin {
                 .setPrettyPrinting()
                 .create();
 
+        saveDefaultConfig();
+
         // And finally our ChatProvider if asked for in config.
         if(getConfig().getBoolean("default-chatter-provider")) {
             this.setChatterProvider(new SimpleChatterProvider());
@@ -78,31 +90,87 @@ public final class WonderfulChat extends JavaPlugin {
         ConfigurationSection section = getConfig().getConfigurationSection("channels");
         if(section == null) {
             getConfig().createSection("channels");
+            return;
         }
+
+        // Keys
         section.getKeys(false).forEach(channelKey -> {
             ConfigurationSection channelSection = section.getConfigurationSection(channelKey);
-
-            // Well
+            // Well :c
             if(channelSection == null) {
                 return;
             }
 
+            // NANI? NO NAME?
             String name = channelSection.getString("name");
-            if(name == null) {
+            if(name == null || name.isEmpty()) {
                 getLogger().warning("Found a Channel without name inside of config.yml (Section " + channelKey + "). Skipping loading.");
+                return;
             }
 
+            // NANI? NO PREFIX?
             String prefix = channelSection.getString("prefix");
-            if(prefix == null) {
+            if(prefix == null || prefix.isEmpty()) {
                 getLogger().warning("Found a Channel without prefix inside of config.yml (Section " + channelKey + "). Skipping loading.");
+                return;
+            }
+            prefix = ChatColor.translateAlternateColorCodes('&', prefix);
+
+            String description = channelSection.getString("description");
+            if(description == null) {
+                description = "";
             }
 
-            String condition = channelSection.getString("name");
+            // NANI? NO MARKER????
+            String marker = channelSection.getString("marker");
+            if(marker == null || marker.isEmpty()) {
+                getLogger().warning("Found a Channel without prefix inside of config.yml (Section " + channelKey + "). Skipping loading.");
+                return;
+            }
+
+            String materialName = channelSection.getString("logo");
+            Material material;
+            if(materialName == null || materialName.isEmpty()) {
+                material = Material.PAPER;
+                getLogger().warning("Found a Channel without logo. Considering PAPER as logo.");
+            } else {
+                material = Material.getMaterial(materialName);
+                if(material == null) {
+                    material = Material.PAPER;
+                    getLogger().warning("Found a Channel with an unkown logo (" + materialName + "). Considering PAPER as logo.");
+                }
+            }
+
+            IChannel channel = new SimpleChannel(name, description, prefix, marker, material);
+            addChannel(channel);
+
+            // Conditions
+            String condition = channelSection.getString("conditions");
             condition = condition == null ? "" : condition;
+            if(condition.isEmpty()) {
+                return;
+            }
+
+            Arrays.stream(condition.split(";"))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .forEach(s -> channel.addCondition(SerializedCondition.of(s)));
         });
 
-        // Checking if there are online players.
+        // Listeners
+        registerListeners(new PlayerListener(), new ChatListener(), new InventoryListener());
 
+        // Command
+        getCommand("channels").setExecutor(new ChannelCommandExecutor());
+
+        // Checking if there are online players.
+        getServer().getOnlinePlayers().forEach(p ->
+                getServer().getScheduler().runTaskAsynchronously(this, () -> {
+                    OfflineChatter chatter = new OfflineChatter(p.getUniqueId());
+                    getChatterProvider().putChatter(chatter);
+                    chatter.load();
+                })
+        );
     }
 
     /**
@@ -204,6 +272,16 @@ public final class WonderfulChat extends JavaPlugin {
      */
     public Optional<IChannel> getChannel(String name) {
         return getChannels().stream().filter(channel -> channel.getName().toLowerCase().equalsIgnoreCase(name.toLowerCase())).findFirst();
+    }
+
+    /**
+     * Registers a Channel inside of our channel cache.
+     *
+     * @param channel Channel
+     */
+    public void addChannel(IChannel channel) {
+        channels.add(channel);
+        info("Registered channel " + channel.getName());
     }
 
     /**

@@ -27,7 +27,7 @@ public final class SimpleChatterProvider implements ChatterProvider {
      */
     public SimpleChatterProvider() {
         try {
-            Files.createDirectories(Paths.get(WonderfulChat.getInstance().getDataFolder().toURI().toString(), "chatter_cache"));
+            Files.createDirectories(Paths.get(WonderfulChat.getInstance().getDataFolder().getPath(), "chatter_cache"));
         } catch (IOException e) {
             e.printStackTrace();
         }

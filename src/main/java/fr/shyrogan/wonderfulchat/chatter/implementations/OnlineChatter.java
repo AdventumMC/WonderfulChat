@@ -41,7 +41,7 @@ public final class OnlineChatter implements IChatter {
         this.player = player;
 
         // Add the Chatter to each Channels.
-        listenedChannels.forEach(channel -> channel.addListener(player));
+        listenedChannels.stream().filter(channel -> channel.respectConditions(player)).forEach(channel -> channel.addListener(player));
     }
 
     /**

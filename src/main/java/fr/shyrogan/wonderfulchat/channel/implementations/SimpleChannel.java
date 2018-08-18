@@ -1,8 +1,10 @@
 package fr.shyrogan.wonderfulchat.channel.implementations;
 
 import fr.shyrogan.wonderfulchat.channel.IChannel;
+import fr.shyrogan.wonderfulchat.conditions.serialization.SerializedCondition;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 import java.util.Collection;
@@ -21,18 +23,28 @@ import java.util.List;
  */
 public final class SimpleChannel implements IChannel {
 
-    private final String name;
-    private String prefix;
+    private final String name, description;
+    private String prefix, marker;
     private final List<Player> listeners = new LinkedList<>();
+    private final List<SerializedCondition> conditions = new LinkedList<>();
+    private final Material logo;
 
-    public SimpleChannel(String name, String prefix) {
+    public SimpleChannel(String name, String description, String prefix, String marker, Material logo) {
         this.name = name;
+        this.description = description;
         this.prefix = prefix;
+        this.marker = marker;
+        this.logo = logo;
     }
 
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public String getDescription() {
+        return description;
     }
 
     @Override
@@ -46,7 +58,18 @@ public final class SimpleChannel implements IChannel {
     }
 
     @Override
+    public String getMarker() {
+        return marker;
+    }
+
+    @Override
+    public Material getLogo() {
+        return logo;
+    }
+
+    @Override
     public Collection<Player> getListeners() {
+        listeners.removeIf(player -> !respectConditions(player));
         return listeners;
     }
 
@@ -56,10 +79,21 @@ public final class SimpleChannel implements IChannel {
     }
 
     @Override
+    public List<SerializedCondition> getConditions() {
+        return conditions;
+    }
+
+    @Override
+    public void addCondition(SerializedCondition condition) {
+        conditions.add(condition);
+    }
+
+    @Override
     public void send(BaseComponent text) {
         final ComponentBuilder builder = new ComponentBuilder(prefix);
         builder.append(text);
-        listeners.forEach(player -> player.spigot().sendMessage(builder.create()));
+
+        getListeners().forEach(player -> player.spigot().sendMessage(builder.create()));
     }
 
 }
